@@ -691,6 +691,7 @@ class GBNSR6out(GBout):
          'ligand'
       EGB_GBNSR6 = []
       search_str = '%s_mutant.mdout' % self.structure if basename.__contains__("mutant_") else '%s.mdout' % self.structure
+
       for file_name in sorted([x for x in os.listdir(INPUT['temp_directory']) if x.__contains__(search_str)]):
          EGB_GBNSR6.append(
             float(open(INPUT['temp_directory'] + file_name, 'r').read().split('EGB')[1].split('REST')[0].split('=')[1].split()[0])

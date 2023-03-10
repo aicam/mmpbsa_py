@@ -84,7 +84,7 @@ def make_trajectories(INPUT, FILES, size, cpptraj, pre):
    frame_count = [frames_per_rank for i in range(size)]
    for i in range(size):
       if i < extras: frame_count[i] += 1
-
+   print(frame_count)
    # Dump our complex trajectories
    if INPUT['full_traj'] or INPUT['entropy']:
       traj.Outtraj(pre + 'complex.%s' % trj_suffix, filetype=INPUT['netcdf'])
@@ -737,10 +737,6 @@ class Trajectory(object):
       for j in range(1, int(frame_count) + 1):
          # find the current frame is being stored
          frame_str = str(j)
-         # if i > 1:
-         #    for frame_c in frame_count[:i - 1]:
-         #       frame_str += frame_c
-         # frame_str = str(frame_str)
          self.Outtraj(temp_directory + '%s.%s.%d.%s' % (structure_name, 'inpcrd', i, frame_str), frames=frame_str,
                       filetype='restart')
 
