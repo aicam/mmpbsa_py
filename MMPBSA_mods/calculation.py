@@ -177,11 +177,10 @@ GBNSR6 script does not work on trajectory so its calculation is based on running
 '''
 class GBNSR6Calculation(Calculation):
    ''' Uses gbnsr6 to evaluate energies '''
-   def __init__(self, prog, prmtop, incrd, inptraj, input_file, output, temp_directory, num_frames):
+   def __init__(self, prog, prmtop, incrd, inptraj, input_file, output, temp_directory):
       Calculation.__init__(self, prog, prmtop, incrd, inptraj,
                            input_file, output)
       self.temp_directory = temp_directory
-      self.num_frames = int(num_frames)
       self.internal_args = [prog]
 
    def setup(self):
@@ -198,11 +197,13 @@ class GBNSR6Calculation(Calculation):
          iterates over all frames (.inpcd) stored in temporary directory and run GBNSR6 script on each of them
          -o and -c are not specified in setup method as they change in each iteration
       """
-      from subprocess import Popen
+      snapshots = [f for f in os.listdir(self.temp_directory) if os.path.isfile(os.path.join(self.temp_directory, f))]
+      snapshots = [snapshots[i] for i in range(len(snapshots)) if
+                          snapshots[i].split('.')[-2] == str(rank) and snapshots[i].__contains__(self.incrd)]
 
-      for i in range(1, self.num_frames + 1):
+      for i in range(1, len(snapshots) + 1):
          self.command_args = self.internal_args.copy()
-         self.command_args.extend(('-o', self.temp_directory + self.output % (rank, i)))
+         self.command_args.extend(('-o', './' + self.temp_directory + self.output % (rank, i)))
          self.command_args.extend(('-c', './' + self.temp_directory + self.inptraj % (self.incrd, rank, i)))
          super().run(rank)
 

@@ -125,7 +125,7 @@ class MMPBSA_App(object):
          raise InternalError('MMPBSA_App not set up and parms not checked!')
       # GBNSR6 remove all files in temporary folder if GBNSR6 is running
       self.FILES.temp_directory += "/" if self.FILES.temp_directory[-1] != '/' else ''
-      if self.INPUT['gbnsr6run']:
+      if self.INPUT['gbnsr6run'] and self.master:
          for f in os.listdir(self.FILES.temp_directory):
             os.remove(self.FILES.temp_directory + f)
       # Set up some local refs for convenience
@@ -302,7 +302,7 @@ class MMPBSA_App(object):
                                 'complex',
                                 '%s' + mutant_postfix + '.inpcrd.%d.%d',
                                 self.pre + 'gbnsr6.mdin', 'complex%s.mdout.%%d.%%d' % (mutant_postfix),
-                                self.FILES.temp_directory, self.numframes)
+                                self.FILES.temp_directory)
           self.calc_list.append(c, '  calculating complex contribution...',
                                 timer_key='gbnsr6')
 
@@ -310,7 +310,7 @@ class MMPBSA_App(object):
                                 'receptor',
                                 '%s' + mutant_postfix + '.inpcrd.%d.%d',
                                 self.pre + 'gbnsr6.mdin', 'receptor%s.mdout.%%d.%%d' % (mutant_postfix),
-                                self.FILES.temp_directory, self.numframes)
+                                self.FILES.temp_directory)
           self.calc_list.append(c, '  calculating receptor contribution...',
                                 timer_key='gbnsr6')
 
@@ -318,7 +318,7 @@ class MMPBSA_App(object):
                                 'ligand',
                                 '%s' + mutant_postfix + '.inpcrd.%d.%d',
                                 self.pre + 'gbnsr6.mdin', 'ligand%s.mdout.%%d.%%d' % (mutant_postfix),
-                                self.FILES.temp_directory, self.numframes)
+                                self.FILES.temp_directory)
           self.calc_list.append(c, '  calculating ligand contribution...',
                                 timer_key='gbnsr6')
 
@@ -820,7 +820,7 @@ class MMPBSA_App(object):
          INPUT = self.INPUT
 
       # GBNSR6 check if the temporary directory exists
-      if INPUT['gbnsr6run']:
+      if INPUT['gbnsr6run'] and self.master:
           if not os.path.exists(self.FILES.temp_directory):
               os.mkdir(self.FILES.temp_directory)
 

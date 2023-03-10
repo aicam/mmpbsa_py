@@ -269,9 +269,9 @@ class GBNSR6Input(NabInput):
                   'alpb': 'alpb',
                   'epsin': 'epsin',
                   'epsout': 'epsout',
-                  'istrng': 'istrng',
+                  'istrng': 'saltcon',
                   'Rs': 'Rs',
-                  'dprob': 'dprob',
+                  'dprob': 'probe',
                   'space': 'space',
                   'arcres': 'arcres',
                   'rbornstat': 'rbornstat',
@@ -292,6 +292,8 @@ class GBNSR6Input(NabInput):
 
        infile.write(first_args_str)
        for i, key in enumerate(list(self.input_items.keys())):
+           if key == 'istrng':
+               self.input_items[key] = self.input_items[key] * 1000
            infile.write('%s=%s%s\n' % (key, self.input_items[key], ',' if i != len(self.input_items.keys()) - 1 else ''))
        infile.write('/\n\n')
        infile.close()
