@@ -54,8 +54,6 @@ def make_trajectories(INPUT, FILES, size, cpptraj, pre):
    else:
       trj_suffix = 'mdcrd'
 
-   print("Trajectory files order are as ", FILES.mdcrd)
-
    # Make sure we set up for a solvated topology; image, strip solvent, etc.
    if FILES.solvated_prmtop:
       traj = Trajectory(FILES.solvated_prmtop, FILES.mdcrd, cpptraj)
@@ -84,7 +82,7 @@ def make_trajectories(INPUT, FILES, size, cpptraj, pre):
    frame_count = [frames_per_rank for i in range(size)]
    for i in range(size):
       if i < extras: frame_count[i] += 1
-   print(frame_count)
+
    # Dump our complex trajectories
    if INPUT['full_traj'] or INPUT['entropy']:
       traj.Outtraj(pre + 'complex.%s' % trj_suffix, filetype=INPUT['netcdf'])
@@ -97,7 +95,7 @@ def make_trajectories(INPUT, FILES, size, cpptraj, pre):
 
       # GBNSR6 dump inpcrd files separately in temporary directory
       if INPUT['gbnsr6run']:
-         traj.OuttrajGBNSR6('complex', frame_count[i], FILES.temp_directory, i)
+         traj.OuttrajGBNSR6('complex', frame_count[i], FILES.temp_directory, i, frame_count)
 
       frame_string = '%d-%d' % (last_frame, last_frame+frame_count[i]-1)
       traj.Outtraj(pre + 'complex.%s.%d' % (trj_suffix, i), 
@@ -118,7 +116,7 @@ def make_trajectories(INPUT, FILES, size, cpptraj, pre):
 
          # GBNSR6 dump inpcrd files separately in temporary directory
          if INPUT['gbnsr6run']:
-            traj.OuttrajGBNSR6('receptor', frame_count[i], FILES.temp_directory, i)
+            traj.OuttrajGBNSR6('receptor', frame_count[i], FILES.temp_directory, i, frame_count)
 
          frame_string = '%d-%d' % (last_frame, last_frame+frame_count[i]-1)
          traj.Outtraj(pre + 'receptor.%s.%d' % (trj_suffix, i),
@@ -138,7 +136,7 @@ def make_trajectories(INPUT, FILES, size, cpptraj, pre):
 
          # GBNSR6 dump inpcrd files separately in temporary directory
          if INPUT['gbnsr6run']:
-            traj.OuttrajGBNSR6('ligand', frame_count[i], FILES.temp_directory, i)
+            traj.OuttrajGBNSR6('ligand', frame_count[i], FILES.temp_directory, i, frame_count)
 
          frame_string = '%d-%d' % (last_frame, last_frame+frame_count[i]-1)
          traj.Outtraj(pre + 'ligand.%s.%d' % (trj_suffix, i),
@@ -185,7 +183,7 @@ def make_trajectories(INPUT, FILES, size, cpptraj, pre):
 
          # GBNSR6 dump inpcrd files separately in temporary directory
          if INPUT['gbnsr6run']:
-            traj.OuttrajGBNSR6('receptor', frame_count[i], FILES.temp_directory, i)
+            traj.OuttrajGBNSR6('receptor', frame_count[i], FILES.temp_directory, i, frame_count)
 
          frame_string = '%d-%d' % (last_frame, last_frame+frame_count[i]-1)
          rectraj.Outtraj(pre + 'receptor.%s.%d' % (trj_suffix, i),
@@ -226,7 +224,7 @@ def make_trajectories(INPUT, FILES, size, cpptraj, pre):
 
          # GBNSR6 dump inpcrd files separately in temporary directory
          if INPUT['gbnsr6run']:
-            traj.OuttrajGBNSR6('receptor', frame_count[i], FILES.temp_directory, i)
+            traj.OuttrajGBNSR6('receptor', frame_count[i], FILES.temp_directory, i, frame_count)
 
          frame_string = '%d-%d' % (last_frame, last_frame+frame_count[i]-1)
          ligtraj.Outtraj(pre + 'ligand.%s.%d' % (trj_suffix, i),
@@ -732,13 +730,24 @@ class Trajectory(object):
 #+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
    # GBNSR6 a method to store trajectory files in form of inpcrd for GBNSR6 script
-   def OuttrajGBNSR6(self, structure_name, frame_count, temp_directory, i):
-
+   def OuttrajGBNSR6(self, structure_name, frame_count, temp_directory, i, all_frames_count = None):
+      total_processed_frames = 0
+      if all_frames_count != None:
+         frame_count = all_frames_count[i]
+         for k in range(i):
+            total_processed_frames += all_frames_count[k]
       for j in range(1, int(frame_count) + 1):
          # find the current frame is being stored
-         frame_str = str(j)
-         self.Outtraj(temp_directory + '%s.%s.%d.%s' % (structure_name, 'inpcrd', i, frame_str), frames=frame_str,
-                      filetype='restart')
+         # the reason we need to keep the track of number of frames processed is due to inconsistency between "frame_count"
+         # and "self.processed_frames". Here we check that if the number of frames stored in "frame_count" is greater than
+         # "self.processed_frames" stop the loop.
+         if all_frames_count == None or len(all_frames_count) == 1 or total_processed_frames < int(self.processed_frames):
+            frame_str = str(j)
+            self.Outtraj(temp_directory + '%s.%s.%d.%s' % (structure_name, 'inpcrd', i, frame_str), frames=frame_str,
+                         filetype='restart')
+         else:
+            break
+         total_processed_frames += 1
 
 #+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 

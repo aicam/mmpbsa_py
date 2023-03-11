@@ -197,9 +197,14 @@ class GBNSR6Calculation(Calculation):
          iterates over all frames (.inpcd) stored in temporary directory and run GBNSR6 script on each of them
          -o and -c are not specified in setup method as they change in each iteration
       """
+
+      # since the application does not keep a record of number of frames in each node of MPI and GBNSR6 needs
+      # snapshot (frame) to compute on, we find the number of frames for each structure in each node by counting
+      # the original files (not mutant or an ouput)
       snapshots = [f for f in os.listdir(self.temp_directory) if os.path.isfile(os.path.join(self.temp_directory, f))]
       snapshots = [snapshots[i] for i in range(len(snapshots)) if
-                          snapshots[i].split('.')[-2] == str(rank) and snapshots[i].__contains__(self.incrd)]
+                          snapshots[i].split('.')[-2] == str(rank) and snapshots[i].__contains__(self.incrd) and
+                          not snapshots[i].__contains__('mutant') and not snapshots[i].__contains__('mdout')]
 
       for i in range(1, len(snapshots) + 1):
          self.command_args = self.internal_args.copy()
